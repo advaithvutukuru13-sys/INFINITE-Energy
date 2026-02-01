@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Energy Growth with Fixed Wind & Correct Time</title>
+<style>
+  body {
+    font-family: 'Arial Rounded MT Bold', cursive, sans-serif;
+    margin: 20px;
+    background: linear-gradient(135deg, #a8edea, #fed6e3);
+    color: #333;
+  }
+  #home {
+    text-align: center;
+  }
+  button {
+    padding: 12px 24px;
+    margin: 10px 0;
+    font-size: 1.2em;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #ff7f50;
+    color: white;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background-color: #ff6347;
+  }
+  #location-details {
+    margin-top: 30px;
+    border: 2px solid #333;
+    padding: 20px;
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+  #location-details h2 {
+    margin-top: 0;
+    color: #2e8b57;
+  }
+  #weather {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+    font-size: 1.2em;
+  }
+  #weather div {
+    padding: 10px;
+    background: rgba(255,255,255,0.8);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  .system-status {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+  }
+  .status-box {
+    padding: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    color: #000;
+  }
+  /* Specific colors for each system */
+  #hydropower {
+    background-color: #3399ff; /* blue */
+  }
+  #solar {
+    background-color: #ffff66; /* yellow */
+  }
+  #wind {
+    background-color: #ADD8E6; /* light blue */
+  }
+  /* Hover effect for all */
+  .status-box:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+  #energyBtn {
+    display: block;
+    margin: 20px auto;
+    font-size: 1.3em;
+    background-color: #4caf50;
+    padding: 10px 20px;
+    border-radius: 8px;
+    color: white;
+  }
+  #energy-details {
+    margin-top: 20px;
+    border-top: 2px dashed #333;
+    padding-top: 10px;
+    display: none;
+  }
+  #energy-details h3 {
+    color: #2e7d32;
+  }
+  #energy-details p {
+    font-size: 1.2em;
+  }
+</style>
+</head>
+<body>
+
+<div id="home">
+  <h1>Welcome to the Infinite Energy Portal</h1>
+  <h2>Locations:</h2>
+  <button id="mountainBtn">Mountain House</button>
+  <p>More locations coming soon.</p>
+</div>
+
+<div id="location-details" style="display:none;">
+  <h2>Mountain House Weather & System Details</h2>
+  <div id="weather">
+    <div><strong>Time:</strong> <span id="current-time"></span></div>
+    <div><strong>Weather:</strong> <span id="weather-desc">63 °F</span></div>
+    <div><strong>Wind Speed:</strong> <span id="wind-speed"></span> km/h</div>
+  </div>
+  
+  <div class="system-status">
+    <div id="hydropower" class="status-box">Hydropower: active</div>
+    <div id="solar" class="status-box">Solar Energy: active</div>
+    <div id="wind" class="status-box">Wind Energy: active</div>
+  </div>
+  
+  <button id="energyBtn">Total Energy Created</button>
+  
+  <div id="energy-details">
+    <h3>Energy Created Today</h3>
+    <p><strong>Hydropower:</strong> <span id="hydro-amount">0</span> kWh</p>
+    <p><strong>Solar Energy:</strong> <span id="solar-amount">0</span> kWh</p>
+    <p><strong>Wind Energy:</strong> <span id="wind-amount">0</span> kWh</p>
+    <p><strong>Total Energy:</strong> <span id="total-energy">0</span> kWh</p>
+  </div>
+</div>
+
+<script>
+  // Fix the clock to show current time
+function updateTime() {
+  const now = new Date();
+  let hours = now.getHours();
+  const minutes = now.getMinutes();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // the hour '0' should be '12'
+  const minutesStr = minutes.toString().padStart(2, '0');
+  document.getElementById('current-time').textContent = `${hours}:${minutesStr} ${ampm}`;
+}
+
+// Fixed wind speed at 13 mph
+const windSpeedMph = 4.9709818932;
+const windSpeedKmh = Math.round(windSpeedMph * 1.60934);
+document.getElementById('wind-speed').textContent = windSpeedKmh;
+
+// Declare energy variables once
+let hydroEnergy = 0;
+let solarEnergy = 0;
+let windEnergy = 0;
+let energyInterval = null;
+let energyRunning = false;
+
+document.getElementById('mountainBtn').addEventListener('click', () => {
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('location-details').style.display = 'block';
+  updateTime();
+});
+
+// When "Total Energy Created" clicked, start big growth
+document.getElementById('energyBtn').addEventListener('click', () => {
+  if (!energyRunning) {
+    energyRunning = true;
+    document.getElementById('energy-details').style.display = 'block';
+    document.getElementById('energyBtn').textContent = 'Updating...';
+
+    energyInterval = setInterval(() => {
+      // Big increase amounts
+      const hydroIncrease = 20;
+      const solarIncrease = 15;
+      const windIncrease = 25;
+
+      hydroEnergy += hydroIncrease;
+      solarEnergy += solarIncrease;
+      windEnergy += windIncrease;
+
+      // Update display
+      document.getElementById('hydro-amount').textContent = hydroEnergy.toFixed(2);
+      document.getElementById('solar-amount').textContent = solarEnergy.toFixed(2);
+      document.getElementById('wind-amount').textContent = windEnergy.toFixed(2);
+      document.getElementById('total-energy').textContent = (hydroEnergy + solarEnergy + windEnergy).toFixed(2);
+    }, 1000);
+  }
+});
+
+// Optional: show individual energy on click
+document.getElementById('hydropower').addEventListener('click', () => {
+  alert(`Hydropower: ${hydroEnergy.toFixed(2)} kWh`);
+});
+document.getElementById('solar').addEventListener('click', () => {
+  alert(`Solar: ${solarEnergy.toFixed(2)} kWh`);
+});
+document.getElementById('wind').addEventListener('click', () => {
+  alert(`Wind: ${windEnergy.toFixed(2)} kWh`);
+});
+
+// Keep the clock updated every second
+setInterval(updateTime, 2000);
+</script>
+</body>
+</html>
