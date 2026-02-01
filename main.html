@@ -52,6 +52,10 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   }
+  #location-title {
+    text-align: center;
+    margin-bottom: 20px;
+  }
   .system-status {
     display: flex;
     justify-content: space-around;
@@ -108,11 +112,12 @@
   <h1>Welcome to the Infinite Energy Portal</h1>
   <h2>Locations:</h2>
   <button id="mountainBtn">Mountain House</button>
+  <button id="laBtn">Los Angeles</button>
   <p>More locations coming soon.</p>
 </div>
 
 <div id="location-details" style="display:none;">
-  <h2>Mountain House Weather & System Details</h2>
+  <h2 id="location-title">Mountain House Weather & System Details</h2>
   <div id="weather">
     <div><strong>Time:</strong> <span id="current-time"></span></div>
     <div><strong>Weather:</strong> <span id="weather-desc">63 °F</span></div>
@@ -134,6 +139,7 @@
     <p><strong>Wind Energy:</strong> <span id="wind-amount">0</span> kWh</p>
     <p><strong>Total Energy:</strong> <span id="total-energy">0</span> kWh</p>
   </div>
+  <button id="backBtn">Back to Home</button>
 </div>
 
 <script>
@@ -154,58 +160,135 @@ const windSpeedMph = 4.9709818932;
 const windSpeedKmh = Math.round(windSpeedMph * 1.60934);
 document.getElementById('wind-speed').textContent = windSpeedKmh;
 
-// Declare energy variables once
-let hydroEnergy = 0;
-let solarEnergy = 0;
-let windEnergy = 0;
-let energyInterval = null;
-let energyRunning = false;
+// Separate energy variables for each city
+let mountainHydro = 0;
+let mountainSolar = 0;
+let mountainWind = 0;
 
+let laHydro = 0;
+let laSolar = 0;
+let laWind = 0;
+
+let currentInterval = null;
+let currentCity = null; // 'mountain' or 'la'
+
+// Function to stop current interval
+function stopCurrentInterval() {
+  if (currentInterval) {
+    clearInterval(currentInterval);
+    currentInterval = null;
+  }
+}
+
+// When "Mountain House" clicked
 document.getElementById('mountainBtn').addEventListener('click', () => {
+  stopCurrentInterval();
+  currentCity = 'mountain';
   document.getElementById('home').style.display = 'none';
   document.getElementById('location-details').style.display = 'block';
   updateTime();
+  // Set weather info
+  document.getElementById('weather-desc').textContent = '63 °F';
+  document.getElementById('wind-speed').textContent = windSpeedKmh;
+  document.getElementById('location-title').textContent = 'Mountain House Weather & System Details';
+
+  // Load existing energy values
+  document.getElementById('hydro-amount').textContent = mountainHydro.toFixed(2);
+  document.getElementById('solar-amount').textContent = mountainSolar.toFixed(2);
+  document.getElementById('wind-amount').textContent = mountainWind.toFixed(2);
+  document.getElementById('total-energy').textContent = (mountainHydro + mountainSolar + mountainWind).toFixed(2);
+
+  // Start growth interval
+  currentInterval = setInterval(() => {
+    mountainHydro += 20;
+    mountainSolar += 15;
+    mountainWind += 25;
+    updateEnergyDisplay();
+  }, 1000);
 });
 
-// When "Total Energy Created" clicked, start big growth
+// When "Los Angeles" clicked
+document.getElementById('laBtn').addEventListener('click', () => {
+  stopCurrentInterval();
+  currentCity = 'la';
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('location-details').style.display = 'block';
+  updateTime();
+  // Set weather info for LA
+  document.getElementById('weather-desc').textContent = '80 °F';
+  document.getElementById('wind-speed').textContent = 11;
+  document.getElementById('location-title').textContent = 'Los Angeles Weather & System Details';
+
+  // Load existing energy values
+  document.getElementById('hydro-amount').textContent = laHydro.toFixed(2);
+  document.getElementById('solar-amount').textContent = laSolar.toFixed(2);
+  document.getElementById('wind-amount').textContent = laWind.toFixed(2);
+  document.getElementById('total-energy').textContent = (laHydro + laSolar + laWind).toFixed(2);
+
+  // Start LA growth (3x faster)
+  currentInterval = setInterval(() => {
+    laHydro += 120; // 3x 40
+    laSolar += 90;  // 3x 30
+    laWind += 150;  // 3x 50
+    updateEnergyDisplay();
+  }, 1000);
+});
+
+// Function to update display based on current city
+function updateEnergyDisplay() {
+  if (currentCity === 'mountain') {
+    document.getElementById('hydro-amount').textContent = mountainHydro.toFixed(2);
+    document.getElementById('solar-amount').textContent = mountainSolar.toFixed(2);
+    document.getElementById('wind-amount').textContent = mountainWind.toFixed(2);
+    document.getElementById('total-energy').textContent = (mountainHydro + mountainSolar + mountainWind).toFixed(2);
+  } else if (currentCity === 'la') {
+    document.getElementById('hydro-amount').textContent = laHydro.toFixed(2);
+    document.getElementById('solar-amount').textContent = laSolar.toFixed(2);
+    document.getElementById('wind-amount').textContent = laWind.toFixed(2);
+    document.getElementById('total-energy').textContent = (laHydro + laSolar + laWind).toFixed(2);
+  }
+}
+
+// When "Total Energy Created" clicked
 document.getElementById('energyBtn').addEventListener('click', () => {
-  if (!energyRunning) {
-    energyRunning = true;
+  if (currentInterval) {
+    // The growth is ongoing, so just show the current values
     document.getElementById('energy-details').style.display = 'block';
-    document.getElementById('energyBtn').textContent = 'Updating...';
-
-    energyInterval = setInterval(() => {
-      // Big increase amounts
-      const hydroIncrease = 20;
-      const solarIncrease = 15;
-      const windIncrease = 25;
-
-      hydroEnergy += hydroIncrease;
-      solarEnergy += solarIncrease;
-      windEnergy += windIncrease;
-
-      // Update display
-      document.getElementById('hydro-amount').textContent = hydroEnergy.toFixed(2);
-      document.getElementById('solar-amount').textContent = solarEnergy.toFixed(2);
-      document.getElementById('wind-amount').textContent = windEnergy.toFixed(2);
-      document.getElementById('total-energy').textContent = (hydroEnergy + solarEnergy + windEnergy).toFixed(2);
-    }, 1000);
   }
 });
 
-// Optional: show individual energy on click
+// Show individual energy on click
 document.getElementById('hydropower').addEventListener('click', () => {
-  alert(`Hydropower: ${hydroEnergy.toFixed(2)} kWh`);
+  if (currentCity === 'mountain') {
+    alert(`Hydropower: ${mountainHydro.toFixed(2)} kWh`);
+  } else {
+    alert(`Hydropower: ${laHydro.toFixed(2)} kWh`);
+  }
 });
 document.getElementById('solar').addEventListener('click', () => {
-  alert(`Solar: ${solarEnergy.toFixed(2)} kWh`);
+  if (currentCity === 'mountain') {
+    alert(`Solar: ${mountainSolar.toFixed(2)} kWh`);
+  } else {
+    alert(`Solar: ${laSolar.toFixed(2)} kWh`);
+  }
 });
 document.getElementById('wind').addEventListener('click', () => {
-  alert(`Wind: ${windEnergy.toFixed(2)} kWh`);
+  if (currentCity === 'mountain') {
+    alert(`Wind: ${mountainWind.toFixed(2)} kWh`);
+  } else {
+    alert(`Wind: ${laWind.toFixed(2)} kWh`);
+  }
 });
 
 // Keep the clock updated every second
 setInterval(updateTime, 2000);
+
+// Add event listener for the back button
+document.getElementById('backBtn').addEventListener('click', () => {
+  stopCurrentInterval();
+  document.getElementById('location-details').style.display = 'none';
+  document.getElementById('home').style.display = 'block';
+});
 </script>
 </body>
 </html>
